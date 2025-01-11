@@ -65,7 +65,7 @@ export default function HomePage() {
 
   const updateAirportLogo = (airportCode) => {
     setLogoUrl(
-      `https://assets-flightaware.bpillsbury.com/fis-board/logos/${airportCode.toLowerCase()}.png`
+      `https://cf-assets-flightaware.bpillsbury.com/${airportCode.toLowerCase()}.png`
     );
   };
 
@@ -374,7 +374,7 @@ export default function HomePage() {
                         const airlineCode = isGeneralAviation
                           ? "GA"
                           : flight.operator_iata || "GA";
-                        const logoUrl = `https://assets-flightaware.bpillsbury.com/fis-board/logos/${airlineCode.toLowerCase()}.png`;
+                        const logoUrl = `https://cf-assets-flightaware.bpillsbury.com/${airlineCode.toLowerCase()}.png`;
                         return (
                           <div
                             style={{ display: "flex", alignItems: "center" }}
