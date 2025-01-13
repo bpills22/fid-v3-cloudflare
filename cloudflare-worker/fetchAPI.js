@@ -7,11 +7,24 @@ export default {
       const origin = request.headers.get("Origin");
       const allowedOrigins = [
         "https://cf-next-flightaware.bpillsbury.com",
-        "http://localhost:3000", // Allow local development
+        "http://localhost:3000",
+        /https:\/\/.*--fid-v3-cloudflare\.pages\.dev$/, // Preview URLs
+        "https://flightaware-worker.bpills33.workers.dev",
       ];
 
       if (!origin) return "*"; // For direct API testing
-      return allowedOrigins.includes(origin) ? origin : null;
+
+      // Check exact matches first
+      if (allowedOrigins.includes(origin)) return origin;
+
+      // Then check regex patterns
+      for (const pattern of allowedOrigins) {
+        if (pattern instanceof RegExp && pattern.test(origin)) {
+          return origin;
+        }
+      }
+
+      return null;
     };
 
     // Handle CORS preflight
