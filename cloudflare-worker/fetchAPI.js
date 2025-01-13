@@ -3,6 +3,19 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname.startsWith("/api/flights/")) {
+      const cacheKey = `${url.pathname}${url.search}`;
+      const cachedResponse = await env.FLIGHTAWARE_CACHE.get(cacheKey);
+
+      if (cachedResponse) {
+        return new Response(cachedResponse, {
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin":
+              "https://cf-next-flightaware.bpillsbury.com",
+          },
+        });
+      }
+
       try {
         const pathSegments = url.pathname.split("/");
         const airportCode = pathSegments[3];
@@ -10,9 +23,7 @@ export default {
         const cursor = url.searchParams.get("cursor");
 
         let apiUrl = `https://aeroapi.flightaware.com/aeroapi/airports/${airportCode}/flights/${flightType}?max_pages=2`;
-        if (cursor) {
-          apiUrl += `&cursor=${cursor}`;
-        }
+        if (cursor) apiUrl += `&cursor=${cursor}`;
 
         const apiResponse = await fetch(apiUrl, {
           headers: { "x-apikey": env.API_KEY },
@@ -25,7 +36,14 @@ export default {
         }
 
         const data = await apiResponse.json();
-        return new Response(JSON.stringify(data), {
+        const responseBody = JSON.stringify(data);
+
+        // Cache the response in KV for 30 seconds
+        await env.FLIGHTAWARE_CACHE.put(cacheKey, responseBody, {
+          expirationTtl: 30,
+        });
+
+        return new Response(responseBody, {
           headers: {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin":
