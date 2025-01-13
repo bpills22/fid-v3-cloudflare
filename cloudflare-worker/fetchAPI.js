@@ -2,20 +2,34 @@ export default {
   async fetch(request, env, context) {
     const url = new URL(request.url);
 
+    // Helper function to determine allowed origins
+    const getAllowedOrigin = (request) => {
+      const origin = request.headers.get("Origin");
+      const allowedOrigins = [
+        "https://cf-next-flightaware.bpillsbury.com",
+        "http://localhost:3000", // Allow local development
+      ];
+
+      if (!origin) return "*"; // For direct API testing
+      return allowedOrigins.includes(origin) ? origin : null;
+    };
+
+    // Handle CORS preflight
+    if (request.method === "OPTIONS") {
+      const allowedOrigin = getAllowedOrigin(request);
+      if (!allowedOrigin) return new Response(null, { status: 403 });
+
+      return new Response(null, {
+        headers: {
+          "Access-Control-Allow-Origin": allowedOrigin,
+          "Access-Control-Allow-Methods": "GET, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+          "Access-Control-Max-Age": "86400",
+        },
+      });
+    }
+
     if (url.pathname.startsWith("/api/flights/")) {
-      const cacheKey = `${url.pathname}${url.search}`;
-      const cachedResponse = await env.FLIGHTAWARE_CACHE.get(cacheKey);
-
-      if (cachedResponse) {
-        return new Response(cachedResponse, {
-          headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin":
-              "https://cf-next-flightaware.bpillsbury.com",
-          },
-        });
-      }
-
       try {
         const pathSegments = url.pathname.split("/");
         const airportCode = pathSegments[3];
@@ -23,7 +37,9 @@ export default {
         const cursor = url.searchParams.get("cursor");
 
         let apiUrl = `https://aeroapi.flightaware.com/aeroapi/airports/${airportCode}/flights/${flightType}?max_pages=2`;
-        if (cursor) apiUrl += `&cursor=${cursor}`;
+        if (cursor) {
+          apiUrl += `&cursor=${cursor}`;
+        }
 
         const apiResponse = await fetch(apiUrl, {
           headers: { "x-apikey": env.API_KEY },
@@ -32,26 +48,27 @@ export default {
         if (!apiResponse.ok) {
           return new Response("Error fetching data from FlightAware API", {
             status: apiResponse.status,
+            headers: {
+              "Access-Control-Allow-Origin": getAllowedOrigin(request),
+            },
           });
         }
 
         const data = await apiResponse.json();
-        const responseBody = JSON.stringify(data);
-
-        // Cache the response in KV for 30 seconds
-        await env.FLIGHTAWARE_CACHE.put(cacheKey, responseBody, {
-          expirationTtl: 30,
-        });
-
-        return new Response(responseBody, {
+        return new Response(JSON.stringify(data), {
           headers: {
             "Content-Type": "application/json",
-            "Access-Control-Allow-Origin":
-              "https://cf-next-flightaware.bpillsbury.com",
+            "Access-Control-Allow-Origin": getAllowedOrigin(request),
           },
         });
       } catch (error) {
-        return new Response("Internal Server Error", { status: 500 });
+        console.error("Worker error:", error);
+        return new Response("Internal Server Error", {
+          status: 500,
+          headers: {
+            "Access-Control-Allow-Origin": getAllowedOrigin(request),
+          },
+        });
       }
     }
 

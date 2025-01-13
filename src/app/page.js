@@ -37,7 +37,13 @@ export default function HomePage() {
     type = "arrivals",
     pageUrl = null
   ) => {
-    const url = pageUrl || `/api/flights/${airportCode}/${type}`;
+    // Base URL changes based on environment
+    const baseUrl =
+      process.env.NODE_ENV === "development"
+        ? "http://localhost:8787" // Local development Worker URL
+        : ""; // Empty string for production (uses relative URL)
+
+    const url = pageUrl || `${baseUrl}/api/flights/${airportCode}/${type}`;
     setDebugInfo(`URL passed to Edge Function: ${url}`);
 
     try {
@@ -47,9 +53,10 @@ export default function HomePage() {
 
       const data = await response.json();
       setFlightData(type === "departures" ? data.departures : data.arrivals);
+
       if (data.links && data.links.next) {
         setNextPageUrl(
-          `/api/flights/${airportCode}/${type}?cursor=${
+          `${baseUrl}/api/flights/${airportCode}/${type}?cursor=${
             data.links.next.split("cursor=")[1]
           }`
         );
@@ -58,7 +65,7 @@ export default function HomePage() {
       }
     } catch (error) {
       console.error("Error fetching flight data:", error);
-      setFlightData([]); // Set to an empty array instead of mock data
+      setFlightData([]);
       setDebugInfo("Failed to fetch data from API.");
     }
   };
