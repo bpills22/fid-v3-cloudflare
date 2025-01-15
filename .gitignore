@@ -11,6 +11,7 @@
 !.yarn/versions
 wrangler.toml
 .dev.vars
+.wrangler/
 
 # testing
 /coverage
