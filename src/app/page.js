@@ -44,7 +44,7 @@ export default function HomePage() {
         : ""; // Empty string for production (uses relative URL)
 
     const url = pageUrl || `${baseUrl}/api/flights/${airportCode}/${type}`;
-    setDebugInfo(`URL passed to Edge Function: ${url}`);
+    setDebugInfo(`URL passed to Worker: ${url}`);
 
     try {
       const response = await fetch(url, { method: "GET" });
