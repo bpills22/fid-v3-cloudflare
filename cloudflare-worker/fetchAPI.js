@@ -8,16 +8,31 @@ export default {
       const allowedOrigins = [
         "https://cf-next-flightaware.bpillsbury.com",
         "http://localhost:3000",
-        /^https:\/\/[a-f0-9]+\.fid-v3-cloudflare\.pages\.dev$/, // Preview URLs
+        /^https:\/\/[0-9a-z]+\.fid-v3-cloudflare\.pages\.dev$/, // Preview URLs with hex and letters
         "https://flightaware-worker.bpills33.workers.dev",
       ];
-
+      // Add CORS debug logging
+      console.log("Incoming origin:", origin);
+      if (origin) {
+        console.log("Testing origins:");
+        for (const pattern of allowedOrigins) {
+          if (pattern instanceof RegExp) {
+            console.log(
+              `Pattern ${pattern} matches origin: ${pattern.test(origin)}`
+            );
+          } else {
+            console.log(
+              `Exact match ${pattern} equals origin: ${pattern === origin}`
+            );
+          }
+        }
+      }
       if (!origin) return "*"; // For direct API testing
 
       // Check exact matches first
       if (allowedOrigins.includes(origin)) return origin;
 
-      // Then check regex patterns
+      // Check regex patterns
       for (const pattern of allowedOrigins) {
         if (pattern instanceof RegExp && pattern.test(origin)) {
           return origin;
