@@ -8,7 +8,7 @@ export default {
       const allowedOrigins = [
         "https://cf-next-flightaware.bpillsbury.com",
         "http://localhost:3000",
-        /https:\/\/.*--fid-v3-cloudflare\.pages\.dev$/, // Preview URLs
+        /^https:\/\/[a-f0-9]+\.fid-v3-cloudflare\.pages\.dev$/, // Preview URLs
         "https://flightaware-worker.bpills33.workers.dev",
       ];
 
