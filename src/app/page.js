@@ -185,6 +185,7 @@ export default function HomePage() {
             onChange={handleSelectChange}
             displayEmpty
           >
+            <MenuItem value="katl">Atlanta - KATL - ATL</MenuItem>
             <MenuItem value="kaus">Austin - KAUS - AUS</MenuItem>
             <MenuItem value="kbos">Boston - KBOS - BOS</MenuItem>
             <MenuItem value="kbur">Burbank - KBUR - BUR</MenuItem>
