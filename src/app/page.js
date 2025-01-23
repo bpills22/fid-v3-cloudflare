@@ -37,13 +37,16 @@ export default function HomePage() {
     type = "arrivals",
     pageUrl = null
   ) => {
-    // Base URL changes based on environment
+    // Keep existing development check
     const baseUrl =
-      process.env.NODE_ENV === "development"
-        ? "http://localhost:8787" // Local development Worker URL
-        : ""; // Empty string for production (uses relative URL)
+      process.env.NODE_ENV === "development" ? "http://localhost:8787" : ""; // Keep empty for production (current behavior)
 
-    const url = pageUrl || `${baseUrl}/api/flights/${airportCode}/${type}`;
+    // Add preview URL handling
+    const previewUrl = window.location.hostname.includes(".pages.dev")
+      ? "https://flightaware-worker.bpills33.workers.dev"
+      : baseUrl;
+
+    const url = pageUrl || `${previewUrl}/api/flights/${airportCode}/${type}`;
     setDebugInfo(`URL passed to Worker: ${url}`);
 
     try {
@@ -56,7 +59,7 @@ export default function HomePage() {
 
       if (data.links && data.links.next) {
         setNextPageUrl(
-          `${baseUrl}/api/flights/${airportCode}/${type}?cursor=${
+          `${previewUrl}/api/flights/${airportCode}/${type}?cursor=${
             data.links.next.split("cursor=")[1]
           }`
         );
@@ -79,7 +82,7 @@ export default function HomePage() {
   useEffect(() => {
     updateAirportLogo(selectedAirport);
     fetchFlights(selectedAirport, "arrivals");
-  }, [selectedAirport]); // Runs whenever `selectedAirport` changes
+  }, [selectedAirport]);
 
   const handleSelectChange = (event) => {
     const airportCode = event.target.value;
@@ -105,7 +108,6 @@ export default function HomePage() {
     const sortedData = [...flightData].sort((a, b) => {
       const aValue = key === "city" ? a.origin.city : a[key];
       const bValue = key === "city" ? b.origin.city : b[key];
-
       if (aValue < bValue) return direction === "asc" ? -1 : 1;
       if (aValue > bValue) return direction === "asc" ? 1 : -1;
       return 0;
@@ -114,7 +116,6 @@ export default function HomePage() {
   };
 
   const renderSortIcon = (key) => {
-    // Show ArrowDropDown by default if the column isn't actively sorted
     if (sortConfig.key !== key) {
       return <ArrowDropDown fontSize="small" style={{ color: "white" }} />;
     }
@@ -125,29 +126,16 @@ export default function HomePage() {
     );
   };
 
-  const filteredFlightData = flightData
-    .filter((flight) => {
-      const query = searchQuery.toLowerCase();
-      return (
-        flight.operator_iata?.toLowerCase().includes(query) ||
-        flight.ident_iata?.toLowerCase().includes(query) ||
-        (flightType === "arrivals"
-          ? flight.origin?.city?.toLowerCase().includes(query)
-          : flight.destination?.city?.toLowerCase().includes(query))
-      );
-    })
-    .concat(
-      flightData.filter((flight) => {
-        const query = searchQuery.toLowerCase();
-        return !(
-          flight.operator_iata?.toLowerCase().includes(query) ||
-          flight.ident_iata?.toLowerCase().includes(query) ||
-          (flightType === "arrivals"
-            ? flight.origin?.city?.toLowerCase().includes(query)
-            : flight.destination?.city?.toLowerCase().includes(query))
-        );
-      })
+  const filteredFlightData = flightData.filter((flight) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      flight.operator_iata?.toLowerCase().includes(query) ||
+      flight.ident_iata?.toLowerCase().includes(query) ||
+      (flightType === "arrivals"
+        ? flight.origin?.city?.toLowerCase().includes(query)
+        : flight.destination?.city?.toLowerCase().includes(query))
     );
+  });
 
   const displayedFlightData = searchQuery ? filteredFlightData : flightData;
 
@@ -156,7 +144,6 @@ export default function HomePage() {
       <Typography variant="h3" gutterBottom style={{ textAlign: "center" }}>
         FlightAware Arrivals and Departures Information
       </Typography>
-
       <div
         style={{
           display: "flex",
@@ -165,19 +152,16 @@ export default function HomePage() {
           marginBottom: "20px",
         }}
       >
-        {/* Left-aligned Airport Logo */}
         {logoUrl && (
           <Image
             id="airport-logo"
             src={logoUrl}
             alt="Airport Logo"
-            width={250} // specify a fixed width
-            height={100} // specify a fixed height
-            style={{ objectFit: "contain" }} // adjust for scaling without distortion
+            width={250}
+            height={100}
+            style={{ objectFit: "contain" }}
           />
         )}
-
-        {/* Centered Airport Selector with Arrivals/Departures Links */}
         <div style={{ textAlign: "center" }}>
           <Typography variant="body1">Select an Airport:</Typography>
           <Select
@@ -191,9 +175,7 @@ export default function HomePage() {
             <MenuItem value="kbos">Boston - KBOS - BOS</MenuItem>
             <MenuItem value="kbur">Burbank - KBUR - BUR</MenuItem>
             <MenuItem value="egll">London Heathrow - EGLL - LHR</MenuItem>
-            <MenuItem value="klax">
-              Los Angeles Int&rsquo;l - KLAX - LAX
-            </MenuItem>
+            <MenuItem value="klax">Los Angeles Int'l - KLAX - LAX</MenuItem>
             <MenuItem value="ksna">
               Orange County/John Wayne - KSNA - SNA
             </MenuItem>
@@ -204,8 +186,6 @@ export default function HomePage() {
             <MenuItem value="ksan">San Diego - KSAN - SAN</MenuItem>
             <MenuItem value="kilg">Wilmington Delaware - KILG - ILG</MenuItem>
           </Select>
-
-          {/* Arrivals and Departures Links */}
           <div className="flight-type-links" style={{ marginTop: "10px" }}>
             <Typography
               variant="body1"
@@ -236,8 +216,6 @@ export default function HomePage() {
             </Typography>
           </div>
         </div>
-
-        {/* Right-aligned Search Box */}
         <TextField
           placeholder="Search by flight #, city, or airline"
           variant="outlined"
@@ -257,11 +235,9 @@ export default function HomePage() {
           }}
         />
       </div>
-
       <Typography style={{ color: "red", marginTop: "10px" }}>
         {debugInfo}
       </Typography>
-
       <TableContainer component={Paper} style={{ marginTop: "20px" }}>
         <Table>
           <TableHead>
@@ -355,74 +331,68 @@ export default function HomePage() {
               </TableCell>
             </TableRow>
           </TableHead>
-
           <TableBody>
-            {(searchQuery ? filteredFlightData : flightData).length > 0 ? (
-              (searchQuery ? filteredFlightData : flightData).map(
-                (flight, index) => (
-                  <TableRow
-                    key={index}
-                    style={{
-                      backgroundColor: index % 2 === 0 ? "#e0f7fa" : "#ffffff",
-                    }}
-                  >
-                    <TableCell>
-                      {flightType === "departures"
-                        ? flight.destination?.city || "Unknown"
-                        : flight.origin?.city || "Unknown"}
-                    </TableCell>
-                    <TableCell>
-                      {flightType === "departures"
-                        ? flight.destination?.code_iata || "N/A"
-                        : flight.origin?.code_iata || "N/A"}
-                    </TableCell>
-                    <TableCell>
-                      {(() => {
-                        const isGeneralAviation =
-                          flight.type === "General_Aviation";
-                        const airlineCode = isGeneralAviation
-                          ? "GA"
-                          : flight.operator_iata || "GA";
-                        const logoUrl = `https://cf-assets-flightaware.bpillsbury.com/${airlineCode.toLowerCase()}.png`;
-                        return (
-                          <div
+            {displayedFlightData.length > 0 ? (
+              displayedFlightData.map((flight, index) => (
+                <TableRow
+                  key={index}
+                  style={{
+                    backgroundColor: index % 2 === 0 ? "#e0f7fa" : "#ffffff",
+                  }}
+                >
+                  <TableCell>
+                    {flightType === "departures"
+                      ? flight.destination?.city || "Unknown"
+                      : flight.origin?.city || "Unknown"}
+                  </TableCell>
+                  <TableCell>
+                    {flightType === "departures"
+                      ? flight.destination?.code_iata || "N/A"
+                      : flight.origin?.code_iata || "N/A"}
+                  </TableCell>
+                  <TableCell>
+                    {(() => {
+                      const isGeneralAviation =
+                        flight.type === "General_Aviation";
+                      const airlineCode = isGeneralAviation
+                        ? "GA"
+                        : flight.operator_iata || "GA";
+                      const logoUrl = `https://cf-assets-flightaware.bpillsbury.com/${airlineCode.toLowerCase()}.png`;
+                      return (
+                        <div style={{ display: "flex", alignItems: "center" }}>
+                          <Image
+                            src={logoUrl}
+                            alt={airlineCode}
+                            width={150}
+                            height={40}
+                            style={{
+                              marginRight: "8px",
+                              objectFit: "contain",
+                            }}
+                          />
+                          <span
                             style={{ display: "flex", alignItems: "center" }}
                           >
-                            <Image
-                              src={logoUrl}
-                              alt={airlineCode}
-                              width={150} // specify the width directly
-                              height={40} // specify the height directly
-                              style={{
-                                marginRight: "8px",
-                                objectFit: "contain",
-                              }}
-                            />
-                            <span
-                              style={{ display: "flex", alignItems: "center" }}
-                            >
-                              {airlineCode}
-                            </span>
-                          </div>
-                        );
-                      })()}
-                    </TableCell>
-
-                    <TableCell>
-                      {flight.ident_iata || "General Aviation"}
-                    </TableCell>
-                    <TableCell>
-                      {new Date(
-                        flight.actual_on ||
-                          flight.estimated_on ||
-                          flight.scheduled_on
-                      ).toLocaleString("en-US") || "Unknown"}
-                    </TableCell>
-                    <TableCell>{flight.status || "Unknown"}</TableCell>
-                    <TableCell>{flight.aircraft_type || "Unknown"}</TableCell>
-                  </TableRow>
-                )
-              )
+                            {airlineCode}
+                          </span>
+                        </div>
+                      );
+                    })()}
+                  </TableCell>
+                  <TableCell>
+                    {flight.ident_iata || "General Aviation"}
+                  </TableCell>
+                  <TableCell>
+                    {new Date(
+                      flight.actual_on ||
+                        flight.estimated_on ||
+                        flight.scheduled_on
+                    ).toLocaleString("en-US") || "Unknown"}
+                  </TableCell>
+                  <TableCell>{flight.status || "Unknown"}</TableCell>
+                  <TableCell>{flight.aircraft_type || "Unknown"}</TableCell>
+                </TableRow>
+              ))
             ) : (
               <TableRow>
                 <TableCell colSpan={7}>No flight data available</TableCell>
