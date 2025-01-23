@@ -13,7 +13,7 @@ export default {
       const allowedOrigins = [
         "https://cf-next-flightaware.bpillsbury.com",
         "http://localhost:3000",
-        /^https:\/\/[0-9a-z-]+\.fid-v3-cloudflare\.pages\.dev$/i, // Preview URLs with case-insensitive match
+        /^https:\/\/[a-z0-9-]+\.fid-v3-cloudflare\.pages\.dev$/i, // Preview URLs with case-insensitive match
         "https://flightaware-worker.bpills33.workers.dev",
       ];
 
