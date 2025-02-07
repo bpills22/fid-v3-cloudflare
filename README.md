@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Flight Information Display System
 
-## Getting Started
+Real-time flight data visualization using Next.js 15.1.4, Cloudflare Pages, and FlightAware's AeroAPI.
 
-First, run the development server:
+## Legal Notice
+For educational/personal use only. No commercial use permitted.
+- Cloudflare Pages/Workers © Cloudflare, Inc.
+- AeroAPI © FlightAware
+- Next.js © Vercel
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Setup
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. Clone repository:
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+`git clone https://github.com/bpills22/fid-v3-cloudflare.git`
+`cd fid-v3-cloudflare`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. Install dependencies:
 
-## Learn More
+`npm install`
+`npm install -g wrangler`
 
-To learn more about Next.js, take a look at the following resources:
+3. Configure environment:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+create `.dev.vars` in project root
+API_KEY=`your_flightaware_api_key`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Add `wrangler.toml` to project root
+Add both `.dev.vars` and `wrangler.toml` to `.gitignore`
 
-## Deploy on Vercel
+4. Development:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Terminal 1: Start Worker
+`wrangler dev`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Terminal 2: Start Next.js
+`nvm use 18`
+`npm run dev`
+
+5. Access:
+
+Worker API: http://localhost:8787/api/flights/[airport]/[type]  ex: http://localhost:8787/api/flights/egll/departures
+Frontend: http://localhost:3000
+Production: https://cf-next-flightaware.bpillsbury.com
+
+6. Usage
+
+Enter IATA/ICAO airport code (e.g., KAUS)
+Select arrivals or departures
+View real-time flight data
+
+7. Technologies
+
+Next.js 15.1.4
+Cloudflare Pages/Workers
+FlightAware AeroAPI
