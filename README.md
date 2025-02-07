@@ -13,11 +13,13 @@ For educational/personal use only. No commercial use permitted.
 1. Clone repository:
 
 `git clone https://github.com/bpills22/fid-v3-cloudflare.git`
+
 `cd fid-v3-cloudflare`
 
 2. Install dependencies:
 
 `npm install`
+
 `npm install -g wrangler`
 
 3. Configure environment:
@@ -35,12 +37,15 @@ Add both `.dev.vars` and `wrangler.toml` to `.gitignore`
 
 # Terminal 2: Start Next.js
 `nvm use 18`
+
 `npm run dev`
 
 5. Access:
 
 Worker API: http://localhost:8787/api/flights/[airport]/[type]  ex: http://localhost:8787/api/flights/egll/departures
+
 Frontend: http://localhost:3000
+
 Production: https://cf-next-flightaware.bpillsbury.com
 
 6. Usage
