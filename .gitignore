@@ -12,6 +12,8 @@
 wrangler.toml
 .dev.vars
 .wrangler/*
+.env.development
+.env.production
 
 # testing
 /coverage
