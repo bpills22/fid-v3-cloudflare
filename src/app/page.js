@@ -37,16 +37,12 @@ export default function HomePage() {
     type = "arrivals",
     pageUrl = null
   ) => {
-    // Keep existing development check
-    const baseUrl =
-      process.env.NODE_ENV === "development" ? "http://localhost:8787" : ""; // Keep empty for production (current behavior)
+    // Get the worker URL from environment variables
+    const workerUrl = process.env.NEXT_PUBLIC_WORKER_URL || 
+      (process.env.NODE_ENV === "development" ? "http://localhost:8787" : "");
 
-    // Add preview URL handling
-    const previewUrl = window.location.hostname.includes(".pages.dev")
-      ? "https://flightaware-worker.bpills33.workers.dev"
-      : baseUrl;
-
-    const url = pageUrl || `${previewUrl}/api/flights/${airportCode}/${type}`;
+    // No need for preview URL handling since we'll use the environment variable
+    const url = pageUrl || `${workerUrl}/api/flights/${airportCode}/${type}`;
     setDebugInfo(`URL passed to Worker: ${url}`);
 
     try {
@@ -59,7 +55,7 @@ export default function HomePage() {
 
       if (data.links && data.links.next) {
         setNextPageUrl(
-          `${previewUrl}/api/flights/${airportCode}/${type}?cursor=${
+          `${workerUrl}/api/flights/${airportCode}/${type}?cursor=${
             data.links.next.split("cursor=")[1]
           }`
         );
