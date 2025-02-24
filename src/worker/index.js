@@ -80,13 +80,6 @@ export default {
 	  const airportCode = pathSegments[3];
 	  const flightType = pathSegments[4];
   
-	  console.log("Debug info:", {
-		airportCode,
-		flightType,
-		hasAPI: !!env.API_KEY,
-		hasKV: !!env.FLIGHTAWARE_CACHE
-	  });
-  
 	  // Generate cache key
 	  const cacheKey = `flights:${airportCode}:${flightType}`;
   
@@ -109,18 +102,12 @@ export default {
 	  // If not in cache or expired, fetch from API
 	  const apiUrl = `https://aeroapi.flightaware.com/aeroapi/airports/${airportCode}/flights/${flightType}?max_pages=2`;
 	  
-	  console.log("Fetching from API:", apiUrl);
-	  
 	  const apiResponse = await fetch(apiUrl, {
 		headers: { "x-apikey": env.API_KEY }
 	  });
   
 	  if (!apiResponse.ok) {
-		console.error("API Error:", {
-		  status: apiResponse.status,
-		  statusText: apiResponse.statusText
-		});
-		throw new Error(`API request failed with status ${apiResponse.status}: ${apiResponse.statusText}`);
+		throw new Error(`API request failed with status ${apiResponse.status}`);
 	  }
   
 	  const data = await apiResponse.json();
@@ -143,11 +130,7 @@ export default {
 	  });
   
 	} catch (error) {
-	  console.error("Handler error:", {
-		message: error.message,
-		stack: error.stack
-	  });
-	  throw error;
+	  throw error; // Let the main error handler deal with it
 	}
   }
   
